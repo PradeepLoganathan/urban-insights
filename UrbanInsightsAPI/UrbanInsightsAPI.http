@@ -1,6 +1,0 @@
-@UrbanInsightsAPI_HostAddress = http://localhost:5104
-
-GET {{UrbanInsightsAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
