@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using UrbanInsights.Api.Data;
 using UrbanInsights.Api.Models;
 
 
+
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 // Load configuration
 builder.Configuration
@@ -17,10 +19,14 @@ builder.Configuration
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Urban Insights API", Version = "v1" });
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "Urban Insights API", 
+        Version = "v1" 
+    });
 });
 builder.Services.AddDbContext<UrbanInsightsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("GreenplumConnection")));
 
 var app = builder.Build();
 
@@ -39,11 +45,6 @@ else
 
 app.UseHttpsRedirection();
 
-app.UseRouting();
-
-app.UseAuthorization();
-
-
 // Sample endpoint
 app.MapGet("/", () => "Welcome to Urban Insights API!");
 
@@ -61,6 +62,42 @@ app.MapPost("/locations", async (Location location, UrbanInsightsDbContext db) =
     db.Locations.Add(location);
     await db.SaveChangesAsync();
     return Results.Created($"/locations/{location.Id}", location);
+});
+
+app.MapPut("/locations/{id}", async (int id, Location inputLocation, UrbanInsightsDbContext db) =>
+{
+    var location = await db.Locations.FindAsync(id);
+
+    if (location is null) return Results.NotFound();
+
+    location.Name = inputLocation.Name;
+    location.Latitude = inputLocation.Latitude;
+    location.Longitude = inputLocation.Longitude;
+
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+});
+
+app.MapDelete("/locations/{id}", async (int id, UrbanInsightsDbContext db) =>
+{
+    if (await db.Locations.FindAsync(id) is Location location)
+    {
+        db.Locations.Remove(location);
+        await db.SaveChangesAsync();
+        return Results.Ok(location);
+    }
+
+    return Results.NotFound();
+});
+
+app.MapGet("/locations/nearby", async (double latitude, double longitude, double radius, UrbanInsightsDbContext db) =>
+{
+    var nearbyLocations = await db.Locations
+        .FromSqlRaw("SELECT * FROM locations WHERE ST_DWithin(ST_SetSRID(ST_Point({0}, {1}), 4326)::geography, geography::geometry, {2})", longitude, latitude, radius)
+        .ToListAsync();
+
+    return Results.Ok(nearbyLocations);
 });
 
 app.Run();

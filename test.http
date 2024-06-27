@@ -1,0 +1,43 @@
+@baseUrl = http://localhost:5036
+
+### Create a new location
+POST {{baseUrl}}/locations
+Content-Type: application/json
+
+{
+  "name": "Central Park",
+  "latitude": 40.785091,
+  "longitude": -73.968285
+}
+
+### Create another location
+POST {{baseUrl}}/locations
+Content-Type: application/json
+
+{
+  "name": "Times Square",
+  "latitude": 40.758896,
+  "longitude": -73.985130
+}
+
+### Create yet another location
+POST {{baseUrl}}/locations
+Content-Type: application/json
+
+{
+  "name": "Empire State Building",
+  "latitude": 40.748817,
+  "longitude": -73.985428
+}
+
+### Get all locations
+GET {{baseUrl}}/locations
+
+### Get a specific location by ID
+GET {{baseUrl}}/locations/1
+
+### Delete a location by ID
+DELETE {{baseUrl}}/locations/2
+
+### Get nearby locations (example)
+GET {{baseUrl}}/locations/nearby?latitude=40.758896&longitude=-73.985130&radius=1

@@ -1,5 +1,6 @@
 namespace UrbanInsights.Api.Models
 {
+    
     public class Event
     {
         public int Id { get; set; }
